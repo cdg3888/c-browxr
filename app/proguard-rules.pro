@@ -1,0 +1,4 @@
+-keep class com.yausername.** { *; }
+-dontwarn com.yausername.**
+-keep class org.mozilla.geckoview.** { *; }
+-keep class fi.iki.elonen.** { *; }
