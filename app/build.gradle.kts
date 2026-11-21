@@ -1,8 +1,17 @@
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val buildTimestamp = DateTimeFormatter
+    .ofPattern("yyyyMMdd-HHmmss")
+    .withZone(ZoneId.systemDefault())
+    .format(Instant.now())
 
 android {
     namespace = "com.cdg.app.cbrowxr"
@@ -59,6 +68,30 @@ android {
             useLegacyPackaging = true
         }
     }
+
+    applicationVariants.all {
+        val variantName = name
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val packageType = output.filters
+                .joinToString("-") { it.identifier }
+                .ifBlank { "universal" }
+            output.outputFileName =
+                "C-Browxr-${defaultConfig.versionName}-${variantName}-${packageType}-${buildTimestamp}.apk"
+        }
+    }
+}
+
+val cleanBuildArtifacts = tasks.register("cleanBuildArtifacts") {
+    group = "build"
+    description = "Deletes build outputs before starting a fresh compile"
+    delete(layout.buildDirectory)
+}
+
+tasks.configureEach {
+    if (name.matches(Regex("""pre[A-Za-z]*Build"""))) {
+        dependsOn(cleanBuildArtifacts)
+    }
 }
 
 dependencies {
@@ -77,6 +110,8 @@ dependencies {
     val ytdlVersion = "0.17.2"
     implementation("io.github.junkfood02.youtubedl-android:library:$ytdlVersion")
     implementation("io.github.junkfood02.youtubedl-android:ffmpeg:$ytdlVersion")
+    implementation("org.apache.commons:commons-compress:1.12")
+    implementation("commons-io:commons-io:2.5")
 
     // Red, Proxy Local y WorkManager
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
